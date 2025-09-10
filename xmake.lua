@@ -1,0 +1,11 @@
+add_rules("mode.debug", "mode.release")
+
+target("GKD_Monitor")
+    add_rules("qt.widgetapp")
+    add_files("src/*.cpp")
+    add_files("ui/mainwindow.ui")
+    -- add files with Q_OBJECT meta (only for qt.moc)
+    add_includedirs("include")
+    add_files("include/*.h")
+    add_frameworks("QtNetwork", "QtGui")
+    set_languages("c++23")
