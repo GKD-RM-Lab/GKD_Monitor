@@ -8,3 +8,5 @@ build/
 build2/
 .cache/
 .vscode/
+
+compile_commands.json
