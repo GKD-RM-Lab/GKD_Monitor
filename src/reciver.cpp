@@ -1,4 +1,5 @@
 #include "reciver.h"
+#include "mainwindow.h"
 #include "setting_manager.hpp"
 #include "valve_manager.h"
 #include <QtCore/qobject.h>
@@ -8,6 +9,8 @@
 #include <cstdint>
 #include <QMessageBox>
 #include <iostream>
+#include "log_box.h"
+#include <QMessageBox>
 Reciver::Reciver(QObject *parent)
     : QObject(parent)
 {
@@ -30,15 +33,16 @@ void Reciver::listen(int port){
 void Reciver::onNewConnection(){
     while(_server->hasPendingConnections()){
         QTcpSocket *socket = _server->nextPendingConnection();
-        new Connection(socket);
+        new Connection(socket,_mainWindow,this);
         QString info = tr("New connection from %1:%2").arg(socket->peerAddress().toString(),QString::number(socket->peerPort()));
         QMessageBox::information(nullptr,tr("Information"),info);
     }
 }
 
-Connection::Connection(QTcpSocket* socket,QObject *parent)
+Connection::Connection(QTcpSocket* socket,MainWindow *mainWindow,QObject *parent)
     : QObject(parent)
     , _socket(socket)
+    , _mainWindow(mainWindow)
 {
     connect(
         _socket,
@@ -58,12 +62,14 @@ Connection::Connection(QTcpSocket* socket,QObject *parent)
 void Connection::onReadyRead(){
     _buffer += _socket->readAll();
 
-    if(_packageSize == 0){
-        _packageSize = _buffer[0];
-    }
+    if(_buffer.size() < 2)
+        return;
+
+    _packageSize = _buffer.left(2).toUShort();
 
     if(_buffer.size() >= _packageSize){
         processData();
+        _packageSize = 0;
     }
 }
 
@@ -74,7 +80,7 @@ void Connection::processData(){
     QDataStream stream{data};
     stream.setByteOrder(QDataStream::LittleEndian);
 
-    stream.skipRawData(1); // 数据包长度
+    stream.skipRawData(2); // 数据包长度
 
     quint8 type;
     stream >> type;
@@ -108,30 +114,24 @@ void Connection::processUpdateValue(QDataStream& stream){
 }
 
 void Connection::processConsoleMessage(QDataStream& stream){
-    ValueType value;
-    uint8_t nameLength;
-    char* rawName;
+    uint16_t messageSize;
+    char* message;
 
-    stream >> value;
-    stream >> nameLength;
-    rawName = new char[nameLength];
-    stream.readRawData(rawName, nameLength);
+    stream >> messageSize;
+    message = new char[messageSize];
+    stream.readRawData(message, messageSize);
 
-    std::string name{rawName,nameLength};
-
-    valueManager.updateValue(name,value);
+    _mainWindow->logBox()->addText(QString::fromStdString({message,messageSize}));
+    delete[] message;
 }
 void Connection::processMessageBox(QDataStream& stream){
-    ValueType value;
-    uint8_t nameLength;
-    char* rawName;
+    uint16_t messageSize;
+    char* message;
 
-    stream >> value;
-    stream >> nameLength;
-    rawName = new char[nameLength];
-    stream.readRawData(rawName, nameLength);
+    stream >> messageSize;
+    message = new char[messageSize];
+    stream.readRawData(message, messageSize);
 
-    std::string name{rawName,nameLength};
-
-    valueManager.updateValue(name,value);
+    QMessageBox::information(nullptr,tr("Message"),QString::fromStdString({message,messageSize}));
+    delete[] message;
 }

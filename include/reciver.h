@@ -7,11 +7,17 @@
 #include <QBuffer>
 #include <cstddef>
 
+class MainWindow;
+
 class Reciver : public QObject
 {
     Q_OBJECT
 public:
     Reciver(QObject *parent = nullptr);
+
+    inline void setMainWindow(MainWindow *mainWindow){
+        _mainWindow = mainWindow;
+    }
 
 public slots:
     void listen(int port);
@@ -21,13 +27,14 @@ private slots:
     
 private:
     QTcpServer *_server;
+    MainWindow *_mainWindow;
 };
 
 class Connection : public QObject
 {
     Q_OBJECT
 public:
-    explicit Connection(QTcpSocket* socket,QObject *parent = nullptr);
+    explicit Connection(QTcpSocket* socket,MainWindow* mainwindow,QObject *parent = nullptr);
     
 private slots:
     void onReadyRead();
@@ -48,4 +55,5 @@ private:
     QTcpSocket *_socket;
     QByteArray _buffer;
     int _packageSize;
+    MainWindow *_mainWindow;
 };

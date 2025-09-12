@@ -26,4 +26,5 @@ private:
     std::string _name;
     Ui::ChartWidget* _ui;
     ChartBase * _chartBase;
+    QChart *_chart;
 };

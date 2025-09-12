@@ -14,9 +14,11 @@ ChartWidget::ChartWidget(std::string name,QWidget* parent)
 
     _name = name;
     _ui->title->setText(QString::fromStdString(name));
-    _ui->chart->setChart(new QChart());
 
-    _ui->chart->chart()->setTitle(tr("Visualization for %1").arg(QString::fromStdString(name)));
+    _chart = new QChart();
+    _ui->chart->setChart(_chart);
+    _chart->setTitle(tr("Visualization for %1").arg(QString::fromStdString(name)));
+    _ui->chart->setRenderHint(QPainter::Antialiasing);
     
     setChartType(Line);
 
@@ -47,8 +49,12 @@ void ChartWidget::setChartType(ChartType type)
         case Line:
             _chartBase = new LineChart(_name,chart,this);
             break;
-        default:
-            std::unreachable();
+        case Spline:
+            _chartBase = new SplineChart(_name,chart,this);
+            break;
+        case Scatter:
+            _chartBase = new ScatterChart(_name,chart,this);
+            break;
     }
 
     chart->addAxis(_chartBase->axisX(),Qt::AlignBottom);

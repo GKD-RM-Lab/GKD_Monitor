@@ -14,6 +14,7 @@
 
 #include "value_tree_model.h"
 #include "reciver.h"
+#include "log_box.h"
 MainWindow::MainWindow(QWidget *parent)
   : QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -23,13 +24,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     this->_reciver = new Reciver(this);
     _reciver->listen(SettingManager::getValue<int>("port", 8080));
-    
-    // Create dock widget
-    QDockWidget* dockWidget = new QDockWidget("Value Tree", this);
-    dockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    _reciver->setMainWindow(this);
     
     // Create tree view
-    QTreeView* treeView = new QTreeView(dockWidget);
+    QTreeView* treeView = new QTreeView();
     treeView->setModel(_valueTreeModel);
     treeView->setContextMenuPolicy(Qt::ActionsContextMenu);
     QAction *actionVisualize = new QAction(tr("Visualize"), treeView);
@@ -44,18 +42,22 @@ MainWindow::MainWindow(QWidget *parent)
         if(valueManager.hasName(name))
             addChart(name);
     });
+
+
+    _logBox = new LogBox(this);
+    auto logBoxDock = createDockWidget(_logBox,tr("Log"),false);
+    logBoxDock->setDockLocation(Qt::DockWidgetArea::BottomDockWidgetArea);
     
-    // Set up dock widget
-    dockWidget->setWidget(treeView);
-    addDockWidget(Qt::LeftDockWidgetArea, dockWidget);
+    auto tvDock = createDockWidget(treeView,tr("Value Tree"),false);
+    tvDock->setDockLocation(Qt::DockWidgetArea::LeftDockWidgetArea);
 
     _timer = new QTimer(this);
     _timer->setInterval(100);
     connect(_timer, &QTimer::timeout, this, &MainWindow::updateValues);
-    // connect(_timer, &QTimer::timeout, [this](){
-    //   valueManager.updateValue("aaa.bbb",QTime::currentTime().second());
-    //   valueManager.updateValue("aaa.b1bb",QTime::currentTime().second()+1);
-    // });
+    connect(_timer, &QTimer::timeout, [this](){
+      valueManager.updateValue("aaa.bbb",QTime::currentTime().second());
+      valueManager.updateValue("aaa.b1bb",QTime::currentTime().second()+1);
+    });
 
     _timer->start();
 }
@@ -66,13 +68,24 @@ void MainWindow::updateValues() {
     ValueManager::instance().update();
 }
 
+QDockWidget* MainWindow::createDockWidget(QWidget* widget,const QString& name,bool closable){
+    QDockWidget* dock = new QDockWidget(name,this);
+    dock->setWidget(widget);
+    widget->setParent(dock);
+    auto features = QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable;
+    if(closable)
+        features |= QDockWidget::DockWidgetClosable;
+
+    dock->setFeatures(features);
+    addDockWidget(Qt::RightDockWidgetArea,dock);
+
+    return dock;
+}
+
 void MainWindow::addChart(const std::string& name) {
     auto chart = new ChartWidget(name,this);
     
-    QDockWidget* dockWidget = new QDockWidget(name.c_str(), this);
-    dockWidget->setWidget(chart);
-
-    addDockWidget(Qt::RightDockWidgetArea, dockWidget);
+    createDockWidget(chart, tr("Visualization for %1").arg(QString::fromStdString(name)));
     connect(_timer, &QTimer::timeout, chart, &ChartWidget::updateChart);
 }
 

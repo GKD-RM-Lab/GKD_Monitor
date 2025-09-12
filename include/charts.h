@@ -64,22 +64,34 @@ private:
     QValueAxis *_axisY;
 };
 
-// class SplineChart : public ChartBase{
-//     Q_OBJECT
-// public:
-//     SplineChart(const std::string& name);
+class SplineChart : public ChartBase{
+    Q_OBJECT
+public:
+    SplineChart(const std::string& name,QChart* chart,QObject *parent = nullptr);
 
-//     QAbstractSeries* series() override;
-//     QAbstractAxis* axis() override;
-//     void update(qint64 time,ValueType value) override;
-// };
+    QAbstractSeries* series() override;
+    QAbstractAxis* axisX() override;
+    QAbstractAxis* axisY() override;
 
-// class ScatterChart : public ChartBase{
-//     Q_OBJECT
-// public:
-//     ScatterChart(const std::string& name);
+    void update(QDateTime time,ValueType value) override;
+private:
+    QSplineSeries *_series;
+    QDateTimeAxis *_axisX;
+    QValueAxis *_axisY;
+};
 
-//     QAbstractSeries* series() override;
-//     QAbstractAxis* axis() override;
-//     void update(qint64 time,ValueType value) override;
-// };
+class ScatterChart : public ChartBase{
+    Q_OBJECT
+public:
+    ScatterChart(const std::string& name,QChart* chart,QObject *parent = nullptr);
+
+    QAbstractSeries* series() override;
+    QAbstractAxis* axisX() override;
+    QAbstractAxis* axisY() override;
+
+    void update(QDateTime time,ValueType value) override;
+private:
+    QScatterSeries *_series;
+    QDateTimeAxis *_axisX;
+    QValueAxis *_axisY;
+};
