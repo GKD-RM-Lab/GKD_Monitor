@@ -1,11 +1,14 @@
 #include "value_tree_model.h"
 #include <QtCore/qalgorithms.h>
+#include <QtCore/qnamespace.h>
 #include <QtCore/qvariant.h>
 #include <cstddef>
 #include "valve_manager.h"
 
-ValueTreeItem::ValueTreeItem(ValueTreeItem *parent)
-    :_parent(parent)
+ValueTreeItem::ValueTreeItem(std::string_view name,const std::string& fullName,ValueTreeItem *parent)
+    :_parent(parent),
+    _name(name),
+    _fullName(fullName)
 {
 }
 
@@ -15,28 +18,28 @@ ValueTreeItem::~ValueTreeItem()
 }
 
 
-ValueTreeItem* ValueTreeItem::insert(std::string_view name_view,QVariant value){
+ValueTreeItem* ValueTreeItem::insert(std::string_view name_view,const std::string& fullName,QVariant value){
     auto sep = name_view.find('.');
     std::string name{name_view.substr(0,sep)};
 
     if(sep == std::string_view::npos){
-        _children[name] = new ValueTreeItem(this);
+        _children[name] = new ValueTreeItem(name,fullName,this);
         _children[name]->setValue(value);
 
         return _children[name];
     }else{
         if(_children.contains(name)){
-            return _children[name]->insert(name_view.substr(sep+1),value);
+            return _children[name]->insert(name_view.substr(sep+1),fullName,value);
         }else{
-            _children[name] = new ValueTreeItem(this);
-            return _children[name]->insert(name_view.substr(sep+1),value);
+            _children[name] = new ValueTreeItem(name,fullName,this);
+            return _children[name]->insert(name_view.substr(sep+1),fullName,value);
         }
     }
 }
 
 ValueTreeModel::ValueTreeModel(QObject *parent)
     : QAbstractItemModel(parent)
-    , _rootItem(new ValueTreeItem())
+    , _rootItem(new ValueTreeItem("",""))
 {
 }
 
@@ -103,19 +106,21 @@ QVariant ValueTreeModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return QVariant();
 
-    if (role != Qt::DisplayRole)
+    if (role != Qt::DisplayRole && role != Qt::UserRole)
         return QVariant();
 
     ValueTreeItem *item = static_cast<ValueTreeItem*>(index.internalPointer());
 
-    switch (index.column()) {
-    case NameColumn:
-        return item->name();
-    case ValueColumn:
-        return item->value();
-    default:
-        return QVariant();
-    }
+    if(role == Qt::DisplayRole)
+        switch (index.column()) {
+        case NameColumn:
+            return item->name();
+        case ValueColumn:
+            return item->value();
+        default:
+            return QVariant();
+        }
+    else return QString::fromStdString(item->fullName());
 }
 
 QVariant ValueTreeModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -158,7 +163,7 @@ void ValueTreeModel::update(){
 
         // Fetch latest value
         QVariant value;
-        if (auto v = valueManager.get(name))
+        if (auto v = valueManager.readValue(name))
             value = QVariant(*v);
         else
             value = QVariant();
@@ -207,7 +212,7 @@ void ValueTreeModel::update(){
 
                 beginInsertRows(parentIndex, insertRow, insertRow);
                 // Insert single-level node (set empty value for intermediate nodes)
-                child = parentItem->insert(segment, isLast ? value : QVariant());
+                child = parentItem->insert(segment,name, isLast ? value : QVariant());
                 endInsertRows();
             } else if (isLast) {
                 // Leaf existed but not in map (hash collision avoidance); update value

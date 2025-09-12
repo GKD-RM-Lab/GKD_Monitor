@@ -6,53 +6,69 @@
 #include <string_view>
 #include <optional>
 #include <cstdint>
+#include <iostream>
 #include <QMap>
+#include <QDateTime>
 
 // valve = value
 
 using ValueType = double;
+using TimeValuePair = QPair<qint64,ValueType>;
 
+
+// 图方便全inline了，这样不好
 class ValueManager : public Singleton<ValueManager>
 {
     ValueManager() = default;
     friend class Singleton<ValueManager>;
 public:
     // 用每次存取间隔的数据的平均值
-    inline void set(const std::string& name, ValueType value){
-        if(_values_cnt.find(name) == _values_cnt.end()){
-            _values_cnt[name] = value;
-            _values_sum[name] = 1;
+    inline void updateValue(const std::string& name, ValueType value){
+        if(_valuesCnt.find(name) == _valuesCnt.end()){
+            _valuesCnt[name] = 1;
+            _valuesSum[name] = value;
         }
         else{
-            if(_values_cnt[name] == 0){
-                _values_sum[name] = 0;
+            if(_valuesCnt[name] == 0){
+                _valuesSum[name] = 0;
             }
-            _values_cnt[name] += value;
-            _values_sum[name]++;
+            _valuesCnt[name]++;
+            _valuesSum[name] += value;
         }
     }
 
-    inline std::optional<ValueType> get(const std::string& name){
-        if(_values_cnt.find(name) != _values_cnt.end()){
-            if(_values_cnt[name] == 0)
-                return _values_sum[name];
-            
-            ValueType res = _values_sum[name] / _values_cnt[name];
-            _values_sum[name] = res;
-            _values_cnt[name] = 0;
+    inline std::optional<ValueType> readValue(const std::string& name){
+        if(_valuesCnt.find(name) != _valuesCnt.end()){
+            if(_valuesCnt[name] == 0)
+                return _valuesSum[name];
 
-            return res;
+            return _valuesSum[name] / _valuesCnt[name];
         }
         return std::nullopt;
     }
 
-    inline QVector<std::string> nameList()const{
-        return _values_sum.keys();
+    inline void update(){
+        qint64 time = QDateTime::currentMSecsSinceEpoch();
+
+        for(const auto& name : _valuesSum.keys()){
+            _valuesSum[name] /= _valuesCnt[name];
+            _valuesCnt[name] = 0;
+
+            _valuesHistory[name].push_back({time,_valuesSum[name]});
+        }
     }
 
+    inline QVector<std::string> nameList()const{
+        return _valuesSum.keys();
+    }
+
+    inline bool hasName(const std::string& name){return _valuesCnt.contains(name);}
+
 private:
-    QMap<std::string, ValueType> _values_sum;
-    QMap<std::string, std::uint32_t> _values_cnt;
+    QMap<std::string, ValueType> _valuesSum;
+    QMap<std::string, std::uint32_t> _valuesCnt;
+
+    QMap<std::string,QVector<TimeValuePair>> _valuesHistory;
 };
 
 #define valueManager (ValueManager::instance())

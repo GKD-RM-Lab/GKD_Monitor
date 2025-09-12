@@ -3,8 +3,11 @@
 #include <QString>
 #include "singleton.hpp"
 
-class ConfigManager : public Singleton<ConfigManager>{
+class SettingManager : public Singleton<SettingManager>{
 public:
+    inline static void init(const QString& filePath){
+        instance().settings.setPath(QSettings::IniFormat, QSettings::UserScope, filePath);
+    }
 
     template<typename T>
     static void setValue(const QString& key, const T& value) {
@@ -16,15 +19,15 @@ public:
         return instance().settings.value(key, defaultValue).template value<T>();
     }
 
-    static void removeKey(const QString& key) {
+    inline static void removeKey(const QString& key) {
         instance().settings.remove(key);
     }
 
-    static void clear() {
+    inline static void clear() {
         instance().settings.clear();
     }
 
-    static void sync() {
+    inline static void sync() {
         instance().settings.sync();
     }
 

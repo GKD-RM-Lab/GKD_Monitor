@@ -3,7 +3,9 @@
 
 #include <QMainWindow>
 
-#include "value_tree_model.h"
+class Reciver;
+class QTimer;
+class ValueTreeModel;
 
 namespace Ui {
 class MainWindow;
@@ -17,9 +19,15 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+public slots:
+    void addChart(const std::string& name);
+    void updateValues();
+
 private:
     Ui::MainWindow *ui;
-    ValueTreeModel* valueTreeModel;
+    ValueTreeModel* _valueTreeModel;
+    Reciver* _reciver;
+    QTimer* _timer;
 };
 
 #endif // MAINWINDOW_H

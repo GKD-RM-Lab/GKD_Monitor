@@ -9,7 +9,7 @@
 
 class ValueTreeItem{
 public:
-    ValueTreeItem(ValueTreeItem* parent = nullptr);
+    ValueTreeItem(std::string_view name,const std::string& fullName,ValueTreeItem* parent = nullptr);
     ~ValueTreeItem();
 
     inline void setValue(const QVariant& value){_value = value;}
@@ -53,11 +53,15 @@ public:
         return QString();
     }
 
-    ValueTreeItem* insert(std::string_view name_view,QVariant value);
+    inline std::string fullName()const{return _fullName;}
+
+    ValueTreeItem* insert(std::string_view name_view,const std::string& fullName,QVariant value);
 private:
     QMap<std::string,ValueTreeItem*> _children;
     ValueTreeItem* _parent;
     QVariant _value;
+    std::string _fullName;
+    std::string _name;
 };
 
 class ValueTreeModel : public QAbstractItemModel

@@ -13,6 +13,8 @@ class Reciver : public QObject
 public:
     Reciver(QObject *parent = nullptr);
 
+public slots:
+    void listen(int port);
 
 private slots:
     void onNewConnection();
@@ -32,6 +34,15 @@ private slots:
 
 private:
     void processData();
+    enum MessageType{
+        UpdateValue = 0x01,
+        ConsoleMessage = 0x02,
+        MessageBox = 0x03,
+    };
+
+    void processUpdateValue(QDataStream& stream);
+    void processConsoleMessage(QDataStream& stream);
+    void processMessageBox(QDataStream& stream);
 
 private:
     QTcpSocket *_socket;
