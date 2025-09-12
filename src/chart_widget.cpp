@@ -1,9 +1,9 @@
+#include <QtCore/qnamespace.h>
+#include <QtWidgets/qcombobox.h>
+
 #include "chart_widget.h"
 #include "charts.h"
 #include "ui_chart_widget.h"
-#include <QtCore/qnamespace.h>
-#include <QtWidgets/qcombobox.h>
-#include <utility>
 
 ChartWidget::ChartWidget(std::string name,QWidget* parent)
     : QWidget(parent),
@@ -13,7 +13,7 @@ ChartWidget::ChartWidget(std::string name,QWidget* parent)
     _ui->setupUi(this);
 
     _name = name;
-    _ui->title->setText(QString::fromStdString(name));
+    _ui->title->setText(tr("Visualization for %1").arg(QString::fromStdString(name)));
 
     _chart = new QChart();
     _ui->chart->setChart(_chart);
@@ -30,10 +30,21 @@ ChartWidget::ChartWidget(std::string name,QWidget* parent)
     connect(_ui->lastTime,&QSpinBox::valueChanged,[this](int value){
         _chartBase->setLastTime(value * 1000);
     });
+
+    _stoped = false;
+    connect(_ui->stop,&QToolButton::clicked,[this](){
+        if(_stoped){
+            _ui->stop->setText(tr("Stop"));
+        }
+        else _ui->stop->setText(tr("Resume"));
+
+        _stoped = !_stoped;
+    });
 }
 
 void ChartWidget::updateChart(){
-    _chartBase->updateValue();
+    if(!_stoped)
+        _chartBase->updateValue();
 }
 
 void ChartWidget::setChartType(ChartType type)

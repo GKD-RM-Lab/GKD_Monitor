@@ -1,7 +1,8 @@
-#include "log_box.h"
-#include "ui_logbox.h"
 #include <QtWidgets/qpushbutton.h>
 #include <QClipboard>
+
+#include "log_box.h"
+#include "ui_logbox.h"
 
 LogBox::LogBox(QWidget *parent)
     : QWidget(parent)

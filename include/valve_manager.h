@@ -1,16 +1,10 @@
 #pragma once
 #include "singleton.hpp"
-#include <QtCore/qcontainerfwd.h>
-#include <map>
 #include <QVariant>
-#include <string_view>
 #include <optional>
 #include <cstdint>
-#include <iostream>
 #include <QMap>
 #include <QDateTime>
-
-// valve = value
 
 using ValueType = double;
 using TimeValuePair = QPair<qint64,ValueType>;

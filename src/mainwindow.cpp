@@ -1,9 +1,3 @@
-#include "mainwindow.h"
-#include "setting_manager.hpp"
-#include "ui_mainwindow.h"
-#include "valve_manager.h"
-#include "chart_widget.h"
-
 #include <QDockWidget>
 #include <QTreeView>
 #include <QtCore/qnamespace.h>
@@ -15,6 +9,12 @@
 #include "value_tree_model.h"
 #include "reciver.h"
 #include "log_box.h"
+#include "mainwindow.h"
+#include "setting_manager.hpp"
+#include "ui_mainwindow.h"
+#include "valve_manager.h"
+#include "chart_widget.h"
+
 MainWindow::MainWindow(QWidget *parent)
   : QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -43,6 +43,16 @@ MainWindow::MainWindow(QWidget *parent)
             addChart(name);
     });
 
+    connect(treeView, &QTreeView::doubleClicked, [this,treeView](const QModelIndex& index){ 
+        if(!index.isValid())
+          return;
+
+        std::string name = index.data(Qt::UserRole).toString().toStdString();
+
+        if(valueManager.hasName(name))
+            addChart(name);
+    });
+
 
     _logBox = new LogBox(this);
     auto logBoxDock = createDockWidget(_logBox,tr("Log"),false);
@@ -54,10 +64,17 @@ MainWindow::MainWindow(QWidget *parent)
     _timer = new QTimer(this);
     _timer->setInterval(100);
     connect(_timer, &QTimer::timeout, this, &MainWindow::updateValues);
-    connect(_timer, &QTimer::timeout, [this](){
-      valueManager.updateValue("aaa.bbb",QTime::currentTime().second());
-      valueManager.updateValue("aaa.b1bb",QTime::currentTime().second()+1);
+
+    auto t = new QTimer(this);
+    connect(t, &QTimer::timeout, [this](){
+      valueManager.updateValue("aaa.bbb",sin(QTime::currentTime().msec()));
+      valueManager.updateValue("aaa.b1bb",QTime::currentTime().msec()+1);
+
+      _logBox->addText("111\n");
     });
+
+    t->setInterval(10);
+    t->start();
 
     _timer->start();
 }

@@ -1,11 +1,12 @@
 #pragma once
-#include "charts.h"
 #include <QChartView>
 #include <QtCore/qobject.h>
 
 namespace Ui{
     class ChartWidget;
 }
+
+class ChartBase;
 
 class ChartWidget : public QWidget{
     Q_OBJECT
@@ -27,4 +28,5 @@ private:
     Ui::ChartWidget* _ui;
     ChartBase * _chartBase;
     QChart *_chart;
+    bool _stoped;
 };

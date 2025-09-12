@@ -1,5 +1,3 @@
-#include "charts.h"
-#include "valve_manager.h"
 #include <QDateTime>
 #include <QLineSeries>
 #include <QScatterSeries>
@@ -11,7 +9,9 @@
 #include <QtCore/qnamespace.h>
 #include <QtCore/qtypes.h>
 #include <QChart>
-#include <limits>
+
+#include "charts.h"
+#include "valve_manager.h"
 ChartBase::ChartBase(const std::string &name,QChart* chart,QObject *parent)
     : _name(name)
     , _lastTime(60000)
@@ -34,6 +34,7 @@ LineChart::LineChart(const std::string &name,QChart* chart,QObject *parent)
     : ChartBase(name,chart,parent)
 {
     _series = new QLineSeries(this);
+    _series->setName(QString::fromStdString(name));
     _axisX = new QDateTimeAxis(this);
     _axisY = new QValueAxis(this);
 
@@ -97,6 +98,7 @@ SplineChart::SplineChart(const std::string &name,QChart* chart,QObject *parent)
     : ChartBase(name,chart,parent)
 {
     _series = new QSplineSeries(this);
+    _series->setName(QString::fromStdString(name));
     _axisX = new QDateTimeAxis(this);
     _axisY = new QValueAxis(this);
 
@@ -159,6 +161,7 @@ ScatterChart::ScatterChart(const std::string &name,QChart* chart,QObject *parent
     : ChartBase(name,chart,parent)
 {
     _series = new QScatterSeries(this);
+    _series->setName(QString::fromStdString(name));
     _axisX = new QDateTimeAxis(this);
     _axisY = new QValueAxis(this);
 

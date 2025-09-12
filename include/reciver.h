@@ -1,13 +1,11 @@
 #pragma once
 #include <QObject>
-#include <QTcpServer>
-#include <QTcpSocket>
-#include <QtCore/qstringview.h>
-#include <QtNetwork/qtcpsocket.h>
 #include <QBuffer>
 #include <cstddef>
 
 class MainWindow;
+class QTcpSocket;
+class QTcpServer;
 
 class Reciver : public QObject
 {

@@ -2,13 +2,13 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QtWidgets/qdockwidget.h>
 #include <QtWidgets/qwidget.h>
 
 class Reciver;
 class QTimer;
 class ValueTreeModel;
 class LogBox;
+class QDockWidget;
 
 namespace Ui {
 class MainWindow;

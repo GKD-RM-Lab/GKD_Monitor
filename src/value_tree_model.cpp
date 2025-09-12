@@ -1,9 +1,10 @@
-#include "value_tree_model.h"
 #include <QtCore/qalgorithms.h>
 #include <QtCore/qnamespace.h>
 #include <QtCore/qvariant.h>
 #include <cstddef>
+
 #include "valve_manager.h"
+#include "value_tree_model.h"
 
 ValueTreeItem::ValueTreeItem(std::string_view name,const std::string& fullName,ValueTreeItem *parent)
     :_parent(parent),

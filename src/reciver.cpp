@@ -1,16 +1,17 @@
-#include "reciver.h"
-#include "mainwindow.h"
-#include "setting_manager.hpp"
-#include "valve_manager.h"
+
 #include <QtCore/qobject.h>
 #include <QtCore/qstringview.h>
 #include <QtCore/qvariant.h>
 #include <QtWidgets/qmessagebox.h>
 #include <cstdint>
 #include <QMessageBox>
-#include <iostream>
+#include <QTcpServer>
+#include <QTcpSocket>
+
 #include "log_box.h"
-#include <QMessageBox>
+#include "reciver.h"
+#include "mainwindow.h"
+#include "valve_manager.h"
 Reciver::Reciver(QObject *parent)
     : QObject(parent)
 {
