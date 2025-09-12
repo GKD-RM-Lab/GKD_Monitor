@@ -52,10 +52,10 @@ MainWindow::MainWindow(QWidget *parent)
     _timer = new QTimer(this);
     _timer->setInterval(100);
     connect(_timer, &QTimer::timeout, this, &MainWindow::updateValues);
-    connect(_timer, &QTimer::timeout, [this](){
-      valueManager.updateValue("aaa.bbb",QTime::currentTime().second());
-      valueManager.updateValue("aaa.b1bb",QTime::currentTime().second()+1);
-    });
+    // connect(_timer, &QTimer::timeout, [this](){
+    //   valueManager.updateValue("aaa.bbb",QTime::currentTime().second());
+    //   valueManager.updateValue("aaa.b1bb",QTime::currentTime().second()+1);
+    // });
 
     _timer->start();
 }
