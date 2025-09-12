@@ -25,11 +25,55 @@ xmake run
 
 ```cpp
 struct{
-		uint8_t package_size;
-  	double  value;
-    uint8_t name_size;
-  	char    name[name_size];
+		uint16_t package_size;
+  	uint8_t message_type;
+    ...
 }
 ```
 
-我们假定你的变量名不会超过250个字节。目前，这个程序只支持 `double` 格式的数据，其他格式等以后再说吧。
+数据包的前两个字节代表数据包的长度，紧跟着一个字节代表消息类型。现在，消息有三种类型：
+
+- Update Value:更新某个变量的值
+- Console Message:向日志区输出日志，使用HTML格式
+- MessagBox Message:让Monitor弹窗
+
+## Update Value
+
+Update Value消息的格式如下：
+
+```cpp
+struct{
+		uint16_t package_size;
+  	uint8_t message_type = 0x01;
+    double value;
+  	uint8_t name_length;
+  	char name[name_length];
+}
+```
+
+懒得解释了
+
+
+
+## Console Message
+
+```cpp
+struct{
+		uint16_t package_size;
+  	uint8_t message_type = 0x02;
+  	uint16_t message_length;
+  	char message[message_length];
+}
+```
+
+## MessageBox Message
+
+```cpp
+struct{
+		uint16_t package_size;
+  	uint8_t message_type = 0x02;
+  	uint16_t message_length;
+  	char message[message_length];
+}
+```
+
