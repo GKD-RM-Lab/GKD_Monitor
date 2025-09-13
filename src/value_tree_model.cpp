@@ -11,6 +11,7 @@ ValueTreeItem::ValueTreeItem(std::string_view name,const std::string& fullName,V
     _name(name),
     _fullName(fullName)
 {
+    _id = valueManager.id(fullName);
 }
 
 ValueTreeItem::~ValueTreeItem()

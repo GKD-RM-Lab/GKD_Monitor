@@ -99,19 +99,28 @@ void Connection::processData(){
     }
 }
 
-void Connection::processUpdateValue(QDataStream& stream){
-    ValueType value;
+void Connection::processRegisterName(QDataStream& stream){
+
     uint8_t nameLength;
+    quint32 id;
     char* rawName;
 
-    stream >> value;
+    stream >> id;
     stream >> nameLength;
     rawName = new char[nameLength];
     stream.readRawData(rawName, nameLength);
 
     std::string name{rawName,nameLength};
+    valueManager.registerName(name,id);
+}
+void Connection::processUpdateValue(QDataStream& stream){
+    ValueType value;
+    quint32 id;
 
-    valueManager.updateValue(name,value);
+    stream >> id;
+    stream >> value;
+
+    valueManager.updateValue(id,value);
 }
 
 void Connection::processConsoleMessage(QDataStream& stream){

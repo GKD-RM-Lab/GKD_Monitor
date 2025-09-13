@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <QMap>
 #include <QDateTime>
+#include <string>
 
 using ValueType = double;
 using TimeValuePair = QPair<qint64,ValueType>;
@@ -17,26 +18,40 @@ class ValueManager : public Singleton<ValueManager>
     friend class Singleton<ValueManager>;
 public:
     // 用每次存取间隔的数据的平均值
-    inline void updateValue(const std::string& name, ValueType value){
-        if(_valuesCnt.find(name) == _valuesCnt.end()){
-            _valuesCnt[name] = 1;
-            _valuesSum[name] = value;
+    inline void updateValue(quint32 id, ValueType value){
+        if(_valuesCnt.find(id) == _valuesCnt.end()){
+            _valuesCnt[id] = 1;
+            _valuesSum[id] = value;
         }
         else{
-            if(_valuesCnt[name] == 0){
-                _valuesSum[name] = 0;
+            if(_valuesCnt[id] == 0){
+                _valuesSum[id] = 0;
             }
-            _valuesCnt[name]++;
-            _valuesSum[name] += value;
+            _valuesCnt[id]++;
+            _valuesSum[id] += value;
         }
     }
 
-    inline std::optional<ValueType> readValue(const std::string& name){
-        if(_valuesCnt.find(name) != _valuesCnt.end()){
-            if(_valuesCnt[name] == 0)
-                return _valuesSum[name];
+    inline void updateValue(const std::string& name, ValueType value){
+        if(_nameMap.contains(name)){
+            updateValue(_nameMap[name],value);
+        }
+    }
 
-            return _valuesSum[name] / _valuesCnt[name];
+
+    inline std::optional<ValueType> readValue(quint32 id){
+        if(_valuesCnt.find(id) != _valuesCnt.end()){
+            if(_valuesCnt[id] == 0)
+                return _valuesSum[id];
+
+            return _valuesSum[id] / _valuesCnt[id];
+        }
+        return std::nullopt;
+    }
+
+    inline std::optional<ValueType> readValue(const std::string& name){
+        if(_nameMap.contains(name)){
+            return readValue(_nameMap[name]);
         }
         return std::nullopt;
     }
@@ -44,7 +59,7 @@ public:
     inline void update(){
         qint64 time = QDateTime::currentMSecsSinceEpoch();
 
-        for(const auto& name : _valuesSum.keys()){
+        for(auto name : _valuesSum.keys()){
             _valuesSum[name] /= _valuesCnt[name];
             _valuesCnt[name] = 0;
 
@@ -52,17 +67,30 @@ public:
         }
     }
 
-    inline QVector<std::string> nameList()const{
-        return _valuesSum.keys();
+    inline void registerName(const std::string& name, quint32 id){
+        _nameMap[name] = id;
+        _idMap[id] = name;
+        _valuesSum[id] = 0;
+        _valuesCnt[id] = 0;
     }
 
-    inline bool hasName(const std::string& name){return _valuesCnt.contains(name);}
+    inline QVector<std::string> nameList()const{
+        return _nameMap.keys();
+    }
+
+    inline bool hasName(const std::string& name){return _nameMap.contains(name);}
+    inline bool hasId(quint32 id){return _valuesCnt.contains(id);}
+    inline quint32 id(const std::string& name){return _nameMap[name];}
+
+    inline std::string name(quint32 id){return _idMap[id];}
 
 private:
-    QMap<std::string, ValueType> _valuesSum;
-    QMap<std::string, std::uint32_t> _valuesCnt;
+    QMap<quint32, ValueType> _valuesSum;
+    QMap<quint32, std::uint32_t> _valuesCnt;
 
-    QMap<std::string,QVector<TimeValuePair>> _valuesHistory;
+    QMap<quint32,QVector<TimeValuePair>> _valuesHistory;
+    QMap<std::string,quint32> _nameMap;
+    QMap<quint32,std::string> _idMap;
 };
 
 #define valueManager (ValueManager::instance())

@@ -43,6 +43,7 @@ public slots:
 
 private:
     std::string _name;
+    quint32 _id;
     QQueue<TimeValuePair> _values;
     qint64 _lastTime;
     QChart* _chart;

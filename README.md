@@ -35,9 +35,21 @@ struct{
 
 数据包的前两个字节代表数据包的长度，紧跟着一个字节代表消息类型。现在，消息有三种类型：
 
+- Register Name:注册一个变量名，避免每次都把name发过来
 - Update Value:更新某个变量的值
 - Console Message:向日志区输出日志，使用HTML格式
 - MessagBox Message:让Monitor弹窗
+
+## Register Name
+
+```cpp
+struct{
+	uint16_t package_size;
+  	uint8_t message_type = 0x00;
+  	uint8_t name_length;
+  	char name[name_length];
+}
+```
 
 ## Update Value
 
@@ -45,23 +57,19 @@ Update Value消息的格式如下：
 
 ```cpp
 struct{
-		uint16_t package_size;
+	uint16_t package_size;
   	uint8_t message_type = 0x01;
+	uint32_t id;
     double value;
-  	uint8_t name_length;
-  	char name[name_length];
 }
 ```
-
-懒得解释了
-
 
 
 ## Console Message
 
 ```cpp
 struct{
-		uint16_t package_size;
+	uint16_t package_size;
   	uint8_t message_type = 0x02;
   	uint16_t message_length;
   	char message[message_length];
@@ -72,7 +80,7 @@ struct{
 
 ```cpp
 struct{
-		uint16_t package_size;
+	uint16_t package_size;
   	uint8_t message_type = 0x02;
   	uint16_t message_length;
   	char message[message_length];

@@ -18,10 +18,11 @@ ChartBase::ChartBase(const std::string &name,QChart* chart,QObject *parent)
     ,QObject(parent),
     _chart(chart)
 {
+    _id = valueManager.id(name);
 }
 
 void ChartBase::updateValue(){ 
-    auto opt = valueManager.readValue(_name);
+    auto opt = valueManager.readValue(_id);
     if (!opt.has_value()) return;
     
     ValueType value = opt.value();

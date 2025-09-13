@@ -37,9 +37,10 @@ MainWindow::MainWindow(QWidget *parent)
         if(!index.isValid())
           return;
 
-        std::string name = index.data(Qt::UserRole).toString().toStdString();
+        quint32 id = index.data(Qt::UserRole).toUInt();
+        auto name = valueManager.name(id);
 
-        if(valueManager.hasName(name))
+        if(valueManager.hasId(id))
             addChart(name);
     });
 
@@ -66,6 +67,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(_timer, &QTimer::timeout, this, &MainWindow::updateValues);
 
     auto t = new QTimer(this);
+
+    valueManager.registerName("aaa.bbb", 1);
+    valueManager.registerName("aaa.b1bb", 2);
     connect(t, &QTimer::timeout, [this](){
       valueManager.updateValue("aaa.bbb",sin(QTime::currentTime().msec()));
       valueManager.updateValue("aaa.b1bb",QTime::currentTime().msec()+1);

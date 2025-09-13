@@ -53,6 +53,7 @@ public:
     }
 
     inline std::string fullName()const{return _fullName;}
+    inline quint32 id()const{return _id;}
 
     ValueTreeItem* insert(std::string_view name_view,const std::string& fullName,QVariant value);
 private:
@@ -60,6 +61,7 @@ private:
     ValueTreeItem* _parent;
     QVariant _value;
     std::string _fullName;
+    quint32 _id;
     std::string _name;
 };
 

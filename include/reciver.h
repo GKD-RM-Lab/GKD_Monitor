@@ -40,11 +40,13 @@ private slots:
 private:
     void processData();
     enum MessageType{
+        RegisterName = 0x00,
         UpdateValue = 0x01,
         ConsoleMessage = 0x02,
         MessageBox = 0x03,
     };
 
+    void processRegisterName(QDataStream& stream);
     void processUpdateValue(QDataStream& stream);
     void processConsoleMessage(QDataStream& stream);
     void processMessageBox(QDataStream& stream);
