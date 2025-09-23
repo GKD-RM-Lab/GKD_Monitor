@@ -63,22 +63,22 @@ MainWindow::MainWindow(QWidget *parent)
     tvDock->setDockLocation(Qt::DockWidgetArea::LeftDockWidgetArea);
 
     _timer = new QTimer(this);
-    _timer->setInterval(100);
+    _timer->setInterval(10);
     connect(_timer, &QTimer::timeout, this, &MainWindow::updateValues);
 
-    auto t = new QTimer(this);
+    // auto t = new QTimer(this);
 
-    valueManager.registerName("aaa.bbb", 1);
-    valueManager.registerName("aaa.b1bb", 2);
-    connect(t, &QTimer::timeout, [this](){
-      valueManager.updateValue("aaa.bbb",sin(QTime::currentTime().msec()));
-      valueManager.updateValue("aaa.b1bb",QTime::currentTime().msec()+1);
+    // valueManager.registerName("aaa.bbb", 1);
+    // valueManager.registerName("aaa.b1bb", 2);
+    // connect(t, &QTimer::timeout, [this](){
+    //   valueManager.updateValue("aaa.bbb",sin(QTime::currentTime().msec()));
+    //   valueManager.updateValue("aaa.b1bb",QTime::currentTime().msec()+1);
 
-      _logBox->addText("111\n");
-    });
+    //   _logBox->addText("111\n");
+    // });
 
-    t->setInterval(10);
-    t->start();
+    // t->setInterval(10);
+    // t->start();
 
     _timer->start();
 }

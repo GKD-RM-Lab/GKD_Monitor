@@ -1,8 +1,6 @@
 #pragma once
 #include "valve_manager.h"
 #include <QQueue>
-#include <QtCore/qdatetime.h>
-#include <QtCore/qobject.h>
 
 class QAbstractAxis;
 class QAbstractSeries;

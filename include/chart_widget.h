@@ -1,5 +1,5 @@
 #pragma once
-#include <QChartView>
+#include <QWidget>
 #include <QtCore/qobject.h>
 
 namespace Ui{
@@ -7,6 +7,7 @@ namespace Ui{
 }
 
 class ChartBase;
+class QChart;
 
 class ChartWidget : public QWidget{
     Q_OBJECT

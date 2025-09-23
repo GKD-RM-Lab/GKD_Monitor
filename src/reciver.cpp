@@ -7,6 +7,7 @@
 #include <QMessageBox>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <iostream>
 
 #include "log_box.h"
 #include "reciver.h"
@@ -66,7 +67,8 @@ void Connection::onReadyRead(){
     if(_buffer.size() < 2)
         return;
 
-    _packageSize = _buffer.left(2).toUShort();
+    
+    _packageSize = (_buffer[1] << 8) + _buffer[0];
 
     if(_buffer.size() >= _packageSize){
         processData();
@@ -87,6 +89,9 @@ void Connection::processData(){
     stream >> type;
 
     switch(type){
+        case MessageType::RegisterName:
+            processRegisterName(stream);
+            break;
         case MessageType::UpdateValue:
             processUpdateValue(stream);
             break;
@@ -100,9 +105,8 @@ void Connection::processData(){
 }
 
 void Connection::processRegisterName(QDataStream& stream){
-
     uint8_t nameLength;
-    quint32 id;
+    uint32_t id;
     char* rawName;
 
     stream >> id;
@@ -111,14 +115,19 @@ void Connection::processRegisterName(QDataStream& stream){
     stream.readRawData(rawName, nameLength);
 
     std::string name{rawName,nameLength};
+
+    std::cout << "RegisterName: " << id << " " << name << std::endl;
     valueManager.registerName(name,id);
 }
 void Connection::processUpdateValue(QDataStream& stream){
     ValueType value;
-    quint32 id;
+    uint32_t id;
 
     stream >> id;
     stream >> value;
+
+    if(!valueManager.name(id).starts_with("rc"))
+        std::cout << "UpdateValue: " << valueManager.name(id) << " " << value << std::endl;
 
     valueManager.updateValue(id,value);
 }

@@ -2,7 +2,7 @@
 #include <QAbstractItemModel>
 #include <QMap>
 #include <QObject>
-#include <QtCore/qvariant.h>
+#include <QVariant>
 #include <cstddef>
 #include <string_view>
 
