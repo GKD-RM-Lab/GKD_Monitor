@@ -4,17 +4,18 @@
 // ValueManager implementations
 
 void ValueManager::updateValue(quint32 id, ValueType value) {
-    if(_valuesCnt.find(id) == _valuesCnt.end()) {
-        _valuesCnt[id] = 1;
-        _valuesSum[id] = value;
+    auto &acc = _values[id];
+
+    if (acc.count == 0) {
+        acc.sum = 0.0;
+        acc.compensation = 0.0;
     }
-    else {
-        if(_valuesCnt[id] == 0) {
-            _valuesSum[id] = 0;
-        }
-        _valuesCnt[id]++;
-        _valuesSum[id] += value;
-    }
+
+    const ValueType y = value - acc.compensation;
+    const ValueType t = acc.sum + y;
+    acc.compensation = (t - acc.sum) - y;
+    acc.sum = t;
+    ++acc.count;
 }
 
 void ValueManager::updateValue(const std::string& name, ValueType value) {
@@ -24,11 +25,14 @@ void ValueManager::updateValue(const std::string& name, ValueType value) {
 }
 
 std::optional<ValueType> ValueManager::readValue(quint32 id) {
-    if(_valuesCnt.find(id) != _valuesCnt.end()) {
-        if(_valuesCnt[id] == 0)
-            return _valuesSum[id];
+    const auto it = _values.find(id);
+    if(it != _values.end()) {
+        const auto &acc = it.value();
+        if(acc.count == 0) {
+            return acc.lastAverage;
+        }
 
-        return _valuesSum[id] / _valuesCnt[id];
+        return (acc.sum + acc.compensation) / static_cast<ValueType>(acc.count);
     }
     return std::nullopt;
 }
@@ -43,21 +47,29 @@ std::optional<ValueType> ValueManager::readValue(const std::string& name) {
 void ValueManager::update() {
     qint64 time = QDateTime::currentMSecsSinceEpoch();
 
-    for(auto name : _valuesSum.keys()) {
-        if(_valuesCnt[name] != 0) {
-            _valuesSum[name] /= _valuesCnt[name];
-            _valuesCnt[name] = 0;
+    for(auto it = _values.begin(); it != _values.end(); ++it) {
+        const quint32 id = it.key();
+        auto &acc = it.value();
+
+        if(acc.count == 0) {
+            continue;
         }
 
-        _valuesHistory[name].push_back({time, _valuesSum[name]});
+        const ValueType average = (acc.sum + acc.compensation) /
+                                  static_cast<ValueType>(acc.count);
+        acc.lastAverage = average;
+        acc.sum = 0.0;
+        acc.compensation = 0.0;
+        acc.count = 0;
+
+        _valuesHistory[id].push_back({time, acc.lastAverage});
     }
 }
 
 void ValueManager::registerName(const std::string& name, quint32 id) {
     _nameMap[name] = id;
     _idMap[id] = name;
-    _valuesSum[id] = 0;
-    _valuesCnt[id] = 0;
+    _values[id] = ValueAccumulator{};
 }
 
 QVector<std::string> ValueManager::nameList() const {
@@ -69,7 +81,7 @@ bool ValueManager::hasName(const std::string& name) {
 }
 
 bool ValueManager::hasId(quint32 id) {
-    return _valuesCnt.contains(id);
+    return _values.contains(id);
 }
 
 quint32 ValueManager::id(const std::string& name) {

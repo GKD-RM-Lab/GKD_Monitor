@@ -3,8 +3,7 @@
 #include <QByteArray>
 
 class MainWindow;
-class QTcpSocket;
-class QTcpServer;
+class QUdpSocket;
 
 class Reciver : public QObject
 {
@@ -16,28 +15,8 @@ public:
         _mainWindow = mainWindow;
     }
 
-public slots:
-    void listen(int port);
-
-private slots:
-    void onNewConnection();
-    
 private:
-    QTcpServer *_server;
-    MainWindow *_mainWindow;
-};
 
-class Connection : public QObject
-{
-    Q_OBJECT
-public:
-    explicit Connection(QTcpSocket* socket,MainWindow* mainwindow,QObject *parent = nullptr);
-    
-private slots:
-    void onReadyRead();
-
-private:
-    void processData();
     enum MessageType{
         RegisterName = 0x00,
         UpdateValue = 0x01,
@@ -45,14 +24,19 @@ private:
         MessageBox = 0x03,
     };
 
+public slots:
+    void listen(int port);
+
+private slots:
+    void onReadyRead();
+    void processData(const QByteArray& data);
+
     void processRegisterName(QDataStream& stream);
     void processUpdateValue(QDataStream& stream);
     void processConsoleMessage(QDataStream& stream);
     void processMessageBox(QDataStream& stream);
-
+    
 private:
-    QTcpSocket *_socket;
-    QByteArray _buffer;
-    int _packageSize;
+    QUdpSocket *_server;
     MainWindow *_mainWindow;
 };

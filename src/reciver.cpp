@@ -2,12 +2,17 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qstringview.h>
 #include <QtCore/qvariant.h>
+#include <QtNetwork/qhostaddress.h>
+#include <QtNetwork/qnetworkdatagram.h>
+#include <QtNetwork/qudpsocket.h>
 #include <QtWidgets/qmessagebox.h>
 #include <cstdint>
 #include <QMessageBox>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <iostream>
+#include <QUdpSocket>
+#include <QNetworkDatagram>
 
 #include "log_box.h"
 #include "reciver.h"
@@ -16,75 +21,34 @@
 Reciver::Reciver(QObject *parent)
     : QObject(parent)
 {
-    _server = new QTcpServer(this);
+    _server = new QUdpSocket(this);
 
     connect(
         _server,
-        &QTcpServer::newConnection,
+        &QUdpSocket::readyRead,
         this,
-        &Reciver::onNewConnection
+        &Reciver::onReadyRead
     );
 
 
 };
 
 void Reciver::listen(int port){
-    _server->listen(QHostAddress::Any,port);
-}
-
-void Reciver::onNewConnection(){
-    while(_server->hasPendingConnections()){
-        QTcpSocket *socket = _server->nextPendingConnection();
-        new Connection(socket,_mainWindow,this);
-        QString info = tr("New connection from %1:%2").arg(socket->peerAddress().toString(),QString::number(socket->peerPort()));
-        QMessageBox::information(nullptr,tr("Information"),info);
+    if(!_server->bind(QHostAddress::AnyIPv4,port)){
+        QMessageBox::critical(nullptr,tr("Error"),tr("Can't bind to port %1").arg(port));
     }
 }
 
-Connection::Connection(QTcpSocket* socket,MainWindow *mainWindow,QObject *parent)
-    : QObject(parent)
-    , _socket(socket)
-    , _mainWindow(mainWindow)
-{
-    connect(
-        _socket,
-        &QTcpSocket::readyRead,
-        this,
-        &Connection::onReadyRead
-    );
-
-    connect(
-        _socket,
-        &QTcpSocket::disconnected,
-        this,
-        &Connection::deleteLater
-    );
-}
-
-void Connection::onReadyRead(){
-    _buffer += _socket->readAll();
-
-    if(_buffer.size() < 2)
-        return;
-
-    
-    _packageSize = (_buffer[1] << 8) + _buffer[0];
-
-    if(_buffer.size() >= _packageSize){
-        processData();
-        _packageSize = 0;
+void Reciver::onReadyRead(){
+    while(_server->hasPendingDatagrams()){
+        QNetworkDatagram datagram = _server->receiveDatagram();
+        processData(datagram.data());
     }
 }
 
-void Connection::processData(){ 
-    QByteArray data = _buffer.mid(0,_packageSize);
-    _buffer.remove(0, _packageSize);
+void Reciver::processData(const QByteArray& data){ 
 
     QDataStream stream{data};
-    stream.setByteOrder(QDataStream::LittleEndian);
-
-    stream.skipRawData(2); // 数据包长度
-
     quint8 type;
     stream >> type;
 
@@ -104,7 +68,7 @@ void Connection::processData(){
     }
 }
 
-void Connection::processRegisterName(QDataStream& stream){
+void Reciver::processRegisterName(QDataStream& stream){
     uint8_t nameLength;
     uint32_t id;
     char* rawName;
@@ -119,20 +83,20 @@ void Connection::processRegisterName(QDataStream& stream){
     std::cout << "RegisterName: " << id << " " << name << std::endl;
     valueManager.registerName(name,id);
 }
-void Connection::processUpdateValue(QDataStream& stream){
+void Reciver::processUpdateValue(QDataStream& stream){
     ValueType value;
     uint32_t id;
 
     stream >> id;
     stream >> value;
 
-    if(!valueManager.name(id).starts_with("rc"))
-        std::cout << "UpdateValue: " << valueManager.name(id) << " " << value << std::endl;
+    // if(!valueManager.name(id).starts_with("rc"))
+    //     std::cout << "UpdateValue: " << valueManager.name(id) << " " << value << std::endl;
 
     valueManager.updateValue(id,value);
 }
 
-void Connection::processConsoleMessage(QDataStream& stream){
+void Reciver::processConsoleMessage(QDataStream& stream){
     uint16_t messageSize;
     char* message;
 
@@ -143,7 +107,7 @@ void Connection::processConsoleMessage(QDataStream& stream){
     _mainWindow->logBox()->addText(QString::fromStdString({message,messageSize}));
     delete[] message;
 }
-void Connection::processMessageBox(QDataStream& stream){
+void Reciver::processMessageBox(QDataStream& stream){
     uint16_t messageSize;
     char* message;
 

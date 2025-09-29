@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <QMap>
 #include <QDateTime>
+#include <QtGlobal>
 #include <string>
 
 using ValueType = double;
@@ -29,9 +30,14 @@ public:
     std::string name(quint32 id);
 
 private:
-    QMap<quint32, ValueType> _valuesSum;
-    QMap<quint32, std::uint32_t> _valuesCnt;
+    struct ValueAccumulator {
+        ValueType sum{0.0};
+        ValueType compensation{0.0};
+        ValueType lastAverage{0.0};
+        quint64 count{0};
+    };
 
+    QMap<quint32, ValueAccumulator> _values;
     QMap<quint32,QVector<TimeValuePair>> _valuesHistory;
     QMap<std::string,quint32> _nameMap;
     QMap<quint32,std::string> _idMap;
